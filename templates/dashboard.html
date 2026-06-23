@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Dashboard – Deadstock Inventory</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <style>
+    :root {
+      --bg:        #f4f6f9;
+      --surface:   #ffffff;
+      --text:      #1a1a2e;
+      --text-muted:#666;
+      --border:    #ddd;
+      --primary:   #2d6a4f;
+      --primary-dark:#1e4d37;
+      --hover-bg:  #f9fffe;
+    }
+    [data-theme="dark"] {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --text:      #e8eaf0;
+      --text-muted:#9da3b4;
+      --border:    #2c2f3e;
+      --primary:   #4ade80;
+      --primary-dark:#22c55e;
+      --hover-bg:  #222633;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+    .topbar{background:var(--primary);color:white;display:flex;justify-content:center}
+    .topbar-inner{width:100%;max-width:1200px;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+    .topbar h1{font-size:18px;font-weight:700}
+    .topbar a,.topbar-actions button{color:white;text-decoration:none;background:rgba(255,255,255,.2);padding:6px 14px;border-radius:6px;font-size:13px;border:none;cursor:pointer;font-family:inherit}
+    .topbar a:hover,.topbar-actions button:hover{background:rgba(255,255,255,.35)}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .page{max-width:1200px;margin:0 auto;padding:32px 24px}
+    .welcome{background:var(--surface);border-radius:12px;padding:22px 28px;box-shadow:0 2px 10px rgba(0,0,0,.07);display:flex;align-items:center;gap:18px;margin-bottom:28px;border:1px solid var(--border)}
+    .avatar{width:52px;height:52px;background:var(--primary);border-radius:50%;color:white;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .welcome h2{font-size:18px;font-weight:700;color:var(--text)}
+    .welcome p{font-size:13px;color:var(--text-muted);margin-top:3px}
+    .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#e8f5e9;color:var(--primary);border:1px solid #a5d6a7;margin-left:8px}
+    .sec{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px;margin:0 0 14px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+    .stat{background:var(--surface);border-radius:10px;padding:18px 22px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--border)}
+    .stat .lbl{font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .stat .val{font-size:28px;font-weight:700;color:var(--primary)}
+    .stat .sub{font-size:12px;color:var(--text-muted);margin-top:4px}
+    .info-box{background:var(--surface);border-radius:12px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:24px;border-left:4px solid var(--primary);border:1px solid var(--border);border-left:4px solid var(--primary)}
+    .info-box h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px}
+    .ir{display:flex;gap:12px;font-size:13px;margin-bottom:6px}
+    .ir .l{color:var(--text-muted);min-width:200px;font-weight:600}
+    .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;margin-bottom:32px}
+    .tcard{background:var(--surface);border-radius:12px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,.07);border-left:4px solid var(--primary);border:1px solid var(--border);border-left:4px solid var(--primary)}
+    .tcard h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .tcard p{font-size:12px;color:var(--text-muted);margin-bottom:16px}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;display:inline-block;border:none;cursor:pointer}
+    .b-add{background:var(--primary);color:white}.b-add:hover{opacity:.9}
+    .b-show{background:#e8f5e9;color:var(--primary);border:1px solid #a5d6a7}.b-show:hover{background:#c8e6c9}
+    .b-del{background:#fde8e8;color:#922;border:1px solid #f5c6c6}.b-del:hover{background:#fcc}
+    .b-blue{background:#e3f2fd;color:#1565c0;border:1px solid #90caf9}.b-blue:hover{background:#bbdefb}
+    .b-amber{background:#fff8e1;color:#795500;border:1px solid #ffe082}.b-amber:hover{background:#fff3cd}
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}
+    .chart-card{background:var(--surface);border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.07);border:1px solid var(--border)}
+    .chart-card h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px}
+    .chart-wrap{position:relative;height:260px}
+    .rtable{width:100%;border-collapse:collapse;font-size:13px}
+    .rtable th{text-align:left;padding:9px 14px;background:var(--primary);color:white;font-weight:600}
+    .rtable td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+    .capacity-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px}
+    .capacity-card{background:var(--surface);border-radius:10px;padding:16px 18px;border:1px solid var(--border)}
+    .capacity-track{background:#e0e0e0;border-radius:8px;height:14px;overflow:hidden;margin:4px 0}
+    .capacity-fill{height:100%;border-radius:8px;transition:width .4s ease}
+    .cap-ok{background:#2d6a4f}.cap-warning{background:#e6ac00}.cap-critical{background:#c0392b}
+    .capacity-label{display:flex;justify-content:space-between;font-size:13px}
+    .capacity-pct{font-size:12px;color:var(--text-muted);text-align:right}
+    .scorecard-summary .rating-display{font-size:28px;font-weight:700;color:var(--primary);margin:8px 0}
+    .scorecard-summary .waste-display{font-size:14px;color:var(--text-muted);margin-bottom:12px}
+    .btn-outline{padding:8px 16px;background:var(--surface);color:var(--primary);border:1px solid var(--primary);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer}
+    .btn-outline:hover{background:#e8f5e9}
+    @media(max-width:700px){.chart-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1>♻ Deadstock Inventory</h1>
+    <div style="display:flex;align-items:center;gap:16px" class="topbar-actions">
+      <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode"><span id="dark-icon">🌙</span></button>
+      <span style="font-size:13px">{{ session['name'] }} — {{ session['role']|replace('_',' ') }}</span>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+</div>
+<div class="page">
+
+  <div class="welcome">
+    <div class="avatar">{{ session['name'][0] }}</div>
+    <div>
+      <h2>Welcome, {{ session['name'] }}<span class="badge">{{ session['role']|replace('_',' ') }}</span></h2>
+      <p>Access: {{ tables|join(', ') }}</p>
+    </div>
+  </div>
+
+  {# ══ ADMIN ══════════════════════════════════════════════════════ #}
+  {% if session['role'] == 'Admin' %}
+  <div class="sec">Overview</div>
+  <div class="stats-grid">
+    <div class="stat"><div class="lbl">Total Deadstock Records</div><div class="val">{{ stats.deadstock }}</div><div class="sub">Across all branches</div></div>
+    <div class="stat"><div class="lbl">Branches</div><div class="val">{{ stats.branches }}</div><div class="sub">Active locations</div></div>
+    {% if stats.top_branch %}
+    <div class="stat"><div class="lbl">Top Branch</div><div class="val" style="font-size:18px;margin-top:4px">{{ stats.top_branch[0] }}</div><div class="sub">Rating: {{ stats.top_branch[1] }}</div></div>
+    {% endif %}
+  </div>
+
+  {% if stats.allocations %}
+  <div class="sec">Allocation Overview</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Allocation Distribution (% share)</h3>
+      <div class="chart-wrap"><canvas id="adminPieChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Allocation by Quantity (items)</h3>
+      <div class="chart-wrap"><canvas id="adminBarChart"></canvas></div>
+    </div>
+  </div>
+  <script>
+    Chart.register(ChartDataLabels);
+    const adLabels = {{ stats.allocations|map(attribute=0)|list|tojson }};
+    const adValues = {{ stats.allocations|map(attribute=1)|list|tojson }};
+    const adColors = adLabels.map(l=>({'Recycle':'#2d6a4f','Donate':'#1565c0','Resell':'#e65100','Upcycle':'#6a1e2d','Rebrand':'#4a148c','Disposal':'#607d8b'}[l]||'#999'));
+    const adTotal  = adValues.reduce((a,b)=>a+Number(b),0);
+    new Chart(document.getElementById('adminPieChart'),{
+      type:'pie',
+      data:{labels:adLabels,datasets:[{data:adValues,backgroundColor:adColors,borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom'},
+          datalabels:{color:'#fff',font:{weight:'bold',size:12},
+            formatter:(v)=>adTotal>0?Math.round(v/adTotal*100)+'%':''
+          }
+        }
+      }
+    });
+    new Chart(document.getElementById('adminBarChart'),{
+      type:'bar',
+      data:{labels:adLabels,datasets:[{label:'Items',data:adValues,backgroundColor:adColors,borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},datalabels:{display:false}},
+        scales:{y:{beginAtZero:true,ticks:{precision:0,stepSize:1}}}
+      }
+    });
+  </script>
+  {% endif %}
+
+  {% if stats.warehouse_capacity %}
+  <div class="sec">Warehouse Capacity</div>
+  <div class="capacity-grid">
+    {% for wh in stats.warehouse_capacity %}
+    {% set current = wh[3]|int %}
+    {% set total = wh[2]|int %}
+    {% set pct = [((current / total * 100)|int), 100]|min if total > 0 else 0 %}
+    <div class="capacity-card">
+      <div class="capacity-label"><span>{{ wh[1] }}</span><span>{{ current }} / {{ total }} units</span></div>
+      <div class="capacity-track">
+        <div class="capacity-fill {% if pct >= 90 %}cap-critical{% elif pct >= 70 %}cap-warning{% else %}cap-ok{% endif %}"
+             style="width: {{ pct }}%"></div>
+      </div>
+      <div class="capacity-pct">{{ pct }}% full</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ══ BRANCH HEAD ════════════════════════════════════════════════ #}
+  {% elif session['role'] == 'Branch' %}
+  {% if stats.my_branch %}
+  <div class="sec">My Branch</div>
+  <div class="info-box">
+    <h3>Branch Details</h3>
+    <div class="ir"><span class="l">Branch ID</span><span>{{ stats.my_branch[0] }}</span></div>
+    <div class="ir"><span class="l">City</span><span>{{ stats.my_branch[1] }}</span></div>
+    <div class="ir"><span class="l">Sustainable Rating</span><span>{{ stats.my_branch[2] }}</span></div>
+    <div class="ir"><span class="l">Last Audit</span><span>{{ stats.my_branch[3] }}</span></div>
+    <div class="ir"><span class="l">Warehouse ID</span><span>{{ stats.my_branch[4] or '—' }}</span></div>
+    <div class="ir"><span class="l">Linked Warehouse City</span><span>{{ stats.my_branch[6] or '—' }}</span></div>
+    <div class="ir"><span class="l">Warehouse Head</span><span>{{ stats.my_branch[7] or '—' }}</span></div>
+    <div class="ir"><span class="l">Warehouse Head Contact</span><span>{{ stats.my_branch[8] or '—' }}</span></div>
+  </div>
+  {% endif %}
+
+  {% if stats.my_branch %}
+  <div class="sec">Sustainability Score</div>
+  <div class="info-box scorecard-summary">
+    <h3>Sustainability Scorecard</h3>
+    <div class="rating-display">{{ stats.my_branch[2] if stats.my_branch[2] is not none else 'N/A' }} / 5.0</div>
+    <div class="waste-display">Waste Reduced: {{ "%.2f"|format(stats.report[8] or 0) if stats.report else 0 }} kg</div>
+    <button class="btn-outline" id="show-graph-btn" onclick="toggleSustainGraph()">
+      📈 View Rating History
+    </button>
+    <div id="sustain-graph-wrap" style="display:none;margin-top:16px;">
+      <canvas id="sustainChart" height="120"></canvas>
+    </div>
+  </div>
+  <script>
+  function toggleSustainGraph() {
+    const wrap = document.getElementById('sustain-graph-wrap');
+    const btn  = document.getElementById('show-graph-btn');
+    const isHidden = wrap.style.display === 'none';
+    wrap.style.display = isHidden ? 'block' : 'none';
+    btn.textContent = isHidden ? '✕ Hide Graph' : '📈 View Rating History';
+    if (isHidden && !wrap.dataset.initialized) {
+      wrap.dataset.initialized = 'true';
+      const historyData = {{ history_json|safe }};
+      const branchId    = {{ session.get('branch_id')|tojson }};
+      const branchData  = historyData[branchId] || { labels: [], data: [] };
+      const ctx = document.getElementById('sustainChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: branchData.labels.length ? branchData.labels : ['No data yet'],
+          datasets: [{
+            label: 'Sustainability Rating',
+            data: branchData.data.length ? branchData.data : [0],
+            borderColor: '#2d6a4f',
+            backgroundColor: 'rgba(45,106,79,0.1)',
+            tension: 0.3,
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: '#2d6a4f',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+          plugins: { legend: { display: false }, tooltip: { mode: 'index' } }
+        }
+      });
+    }
+  }
+  </script>
+  {% endif %}
+
+  {% if stats.report %}
+  <div class="sec">My Report & Disposal Summary</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Allocation Breakdown (% share)</h3>
+      <div class="chart-wrap"><canvas id="branchDoughnut"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Report Details</h3>
+      <div class="ir"><span class="l">Items Resold</span><span>{{ stats.report[2] }}</span></div>
+      <div class="ir"><span class="l">Items Recycled</span><span>{{ stats.report[3] }}</span></div>
+      <div class="ir"><span class="l">Items Donated</span><span>{{ stats.report[4] }}</span></div>
+      <div class="ir"><span class="l">Items Upcycled</span><span>{{ stats.report[5] }}</span></div>
+      <div class="ir"><span class="l">Items Rebranded</span><span>{{ stats.report[6] }}</span></div>
+      <div class="ir"><span class="l">Items Disposed</span><span>{{ stats.report[7] }}</span></div>
+      <div class="ir"><span class="l">Estimated Waste Reduced</span><span>{{ "%.2f"|format(stats.report[8] or 0) }} kg</span></div>
+      <br><a href="/view_report" class="btn b-show">Full Report</a>
+    </div>
+  </div>
+  <script>
+    Chart.register(ChartDataLabels);
+    const brLabels = {{ stats.branch_alloc_labels|tojson }};
+    const brValues = {{ stats.branch_alloc_values|tojson }};
+    const brColors = {{ stats.branch_alloc_colors|tojson }};
+    const brTotal  = brValues.reduce((a,b)=>a+b,0);
+    new Chart(document.getElementById('branchDoughnut'),{
+      type:'doughnut',
+      data:{labels:brLabels,datasets:[{data:brValues,backgroundColor:brColors,borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom'},
+          datalabels:{color:'#fff',font:{weight:'bold',size:12},
+            formatter:(v)=>brTotal>0?Math.round(v/brTotal*100)+'%':''
+          }
+        }
+      }
+    });
+  </script>
+  {% else %}
+  <div class="info-box" style="border-left-color:#e65100">
+    <h3>No Report Yet</h3>
+    <p style="font-size:13px;color:#888;margin-top:4px">Your report will appear here once the Stock Allocation Head processes your items.</p>
+  </div>
+  {% endif %}
+
+  {# ══ WAREHOUSE HEAD ═════════════════════════════════════════════ #}
+  {% elif session['role'] == 'Warehouse' %}
+  <div class="sec">Warehouse Information</div>
+  {% if stats.warehouse_info %}
+  <div class="info-box">
+    <h3>My Warehouse</h3>
+    <div class="ir"><span class="l">Warehouse ID</span><span>{{ stats.warehouse_info[0] }}</span></div>
+    <div class="ir"><span class="l">City</span><span>{{ stats.warehouse_info[1] }}</span></div>
+    <div class="ir"><span class="l">Last Audit</span><span>{{ stats.warehouse_info[2] }}</span></div>
+    <div class="ir"><span class="l">Capacity</span><span>{{ stats.warehouse_info[3] }}</span></div>
+    <div class="ir"><span class="l">Head Name</span><span>{{ stats.warehouse_info[4] }}</span></div>
+    <div class="ir"><span class="l">Contact</span><span>{{ stats.warehouse_info[5] or '—' }}</span></div>
+  </div>
+  {% endif %}
+  {% if stats.sa_contact %}
+  <div class="info-box" style="border-left-color:#1565c0">
+    <h3>Stock Allocation Head Contact</h3>
+    <div class="ir"><span class="l">Name</span><span>{{ stats.sa_contact[0] }}</span></div>
+    <div class="ir"><span class="l">Contact</span><span>{{ stats.sa_contact[1] or '—' }}</span></div>
+  </div>
+  {% endif %}
+  {% if stats.warehouse_capacity %}
+  <div class="sec">Warehouse Capacity</div>
+  <div class="capacity-grid">
+    {% for wh in stats.warehouse_capacity %}
+    {% set current = wh[3]|int %}
+    {% set total = wh[2]|int %}
+    {% set pct = [((current / total * 100)|int), 100]|min if total > 0 else 0 %}
+    <div class="capacity-card">
+      <div class="capacity-label"><span>{{ wh[1] }}</span><span>{{ current }} / {{ total }} units</span></div>
+      <div class="capacity-track">
+        <div class="capacity-fill {% if pct >= 90 %}cap-critical{% elif pct >= 70 %}cap-warning{% else %}cap-ok{% endif %}"
+             style="width: {{ pct }}%"></div>
+      </div>
+      <div class="capacity-pct">{{ pct }}% full</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ══ STOCK ALLOCATION HEAD ══════════════════════════════════════ #}
+  {% elif session['role'] == 'Stock_Allocation' %}
+  <div class="sec">Overview</div>
+  <div class="stats-grid">
+    <div class="stat"><div class="lbl">Total Deadstock Records</div><div class="val">{{ stats.deadstock }}</div><div class="sub">Across all branches</div></div>
+    <div class="stat"><div class="lbl">Branches</div><div class="val">{{ stats.branches }}</div><div class="sub">Active locations</div></div>
+    {% if stats.top_branch %}
+    <div class="stat"><div class="lbl">Top Branch</div><div class="val" style="font-size:18px;margin-top:4px">{{ stats.top_branch[0] }}</div><div class="sub">Rating: {{ stats.top_branch[1] }}</div></div>
+    {% endif %}
+  </div>
+
+  {% if stats.allocations %}
+  <div class="sec">Allocation Overview</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Allocation Distribution (% share)</h3>
+      <div class="chart-wrap"><canvas id="saPieChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Allocation by Quantity (items)</h3>
+      <div class="chart-wrap"><canvas id="saBarChart"></canvas></div>
+    </div>
+  </div>
+  <script>
+    Chart.register(ChartDataLabels);
+    const saLabels = {{ stats.allocations|map(attribute=0)|list|tojson }};
+    const saValues = {{ stats.allocations|map(attribute=1)|list|tojson }};
+    const saColors = saLabels.map(l=>({'Recycle':'#2d6a4f','Donate':'#1565c0','Resell':'#e65100','Upcycle':'#6a1e2d','Rebrand':'#4a148c','Disposal':'#607d8b'}[l]||'#999'));
+    const saTotal  = saValues.reduce((a,b)=>a+Number(b),0);
+    new Chart(document.getElementById('saPieChart'),{
+      type:'pie',
+      data:{labels:saLabels,datasets:[{data:saValues,backgroundColor:saColors,borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom'},
+          datalabels:{color:'#fff',font:{weight:'bold',size:12},
+            formatter:(v)=>saTotal>0?Math.round(v/saTotal*100)+'%':''
+          }
+        }
+      }
+    });
+    new Chart(document.getElementById('saBarChart'),{
+      type:'bar',
+      data:{labels:saLabels,datasets:[{label:'Items',data:saValues,backgroundColor:saColors,borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},datalabels:{display:false}},
+        scales:{y:{beginAtZero:true,ticks:{precision:0,stepSize:1}}}
+      }
+    });
+  </script>
+  {% endif %}
+
+  {% if stats.sustainability %}
+  <div class="sec">Sustainability Summary</div>
+  <div style="background:white;border-radius:12px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:28px">
+    <table class="rtable">
+      <thead><tr><th>Allocation Type</th><th>Entries</th><th>Total Qty</th></tr></thead>
+      <tbody>{% for row in stats.sustainability %}<tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {# ══ MANAGE DATA ════════════════════════════════════════════════ #}
+  <div class="sec">Manage Data</div>
+  <div class="tgrid">
+
+    {% if 'DEADSTOCK' in tables %}
+    <div class="tcard">
+      <h3>Deadstock</h3>
+      <p>{% if session['role']=='Branch' %}Your unsent inventory{% elif session['role']=='Warehouse' %}Stock received from branches{% elif session['role']=='Stock_Allocation' %}Stock ready to allocate{% else %}All deadstock records{% endif %}</p>
+      <div class="btn-row">
+        {% if session['role']=='Branch' %}<a href="/add/deadstock" class="btn b-add">+ Add</a>{% endif %}
+        <a href="/show/DEADSTOCK" class="btn b-show">View</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if 'REPORT' in tables %}
+    <div class="tcard">
+      <h3>Report</h3>
+      <p>{% if session['role']=='Branch' %}Your branch disposal report (read-only){% elif session['role']=='Stock_Allocation' %}Branch-wise allocation report{% else %}All branch reports{% endif %}</p>
+      <div class="btn-row">
+        {% if session['role']=='Branch' %}
+          <a href="/view_report" class="btn b-show">View Report</a>
+        {% elif session['role']=='Stock_Allocation' %}
+          <a href="/sa_branch_report" class="btn b-show">View Report</a>
+        {% else %}
+          <a href="/show/REPORT" class="btn b-show">View All</a>
+          <a href="/admin_branch_report" class="btn b-blue">Branch-wise Report</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if 'BRANCH' in tables and session['role'] != 'Branch' %}
+    <div class="tcard">
+      <h3>Branch</h3>
+      <p>{% if session['role']=='Warehouse' %}Branches under your warehouse{% else %}All branch locations{% endif %}</p>
+      <div class="btn-row">
+        {% if session['role']=='Admin' %}<a href="/add/branch" class="btn b-add">+ Add</a>{% endif %}
+        <a href="/show/BRANCH" class="btn b-show">View</a>
+        {% if session['role']=='Admin' %}<a href="/deleted/branch" class="btn b-del">Deleted</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if 'WAREHOUSE' in tables and session['role'] == 'Admin' %}
+    <div class="tcard">
+      <h3>Warehouse</h3>
+      <p>Warehouse locations and capacity</p>
+      <div class="btn-row">
+        <a href="/add/warehouse" class="btn b-add">+ Add</a>
+        <a href="/show/WAREHOUSE" class="btn b-show">View</a>
+        <a href="/deleted/warehouse" class="btn b-del">Deleted</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if 'STOCK_ALLOCATION' in tables %}
+    <div class="tcard">
+      <h3>Stock Allocation</h3>
+      <p>All allocation records</p>
+      <div class="btn-row"><a href="/show/STOCK_ALLOCATION" class="btn b-show">View</a></div>
+    </div>
+    {% endif %}
+
+    {% if 'RECYCLE_RECORD' in tables %}
+    <div class="tcard">
+      <h3>Recycle Record</h3>
+      <p>View all recycled stock records</p>
+      <div class="btn-row">
+        <a href="/show/RECYCLE_RECORD" class="btn b-show">View</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if 'HEAD' in tables %}
+    <div class="tcard">
+      <h3>Head</h3>
+      <p>Register a new head or view all heads with filters</p>
+      <div class="btn-row">
+        <a href="/add/head" class="btn b-add">+ Add Head</a>
+        <a href="/show/heads" class="btn b-show">Show Heads</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if 'CONTACTS' in tables %}
+    <div class="tcard">
+      <h3>Contacts</h3>
+      <p>Contact numbers per head</p>
+      <div class="btn-row">
+        <a href="/add/contacts" class="btn b-add">+ Add</a>
+        <a href="/show/CONTACTS" class="btn b-show">View</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if 'MATERIAL' in tables %}
+    <div class="tcard">
+      <h3>Material</h3>
+      <p>Fabric types and sustainability</p>
+      <div class="btn-row">
+        {% if session.get('role') != 'Branch' %}
+        <a href="/add/material" class="btn b-add">+ Add</a>
+        {% endif %}
+        <a href="/show/MATERIAL" class="btn b-show">View</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if session['role'] == 'Admin' %}
+    <div class="tcard">
+      <h3>Sustainability Scorecard</h3>
+      <p>Branch ratings, green vs disposal trends</p>
+      <div class="btn-row"><a href="/sustainability" class="btn b-show">View Scorecard</a></div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+<script>
+const toggle = document.getElementById('dark-toggle');
+const icon   = document.getElementById('dark-icon');
+const saved  = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
+toggle?.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  icon.textContent = next === 'dark' ? '☀️' : '🌙';
+});
+</script>
+</body>
+</html>
