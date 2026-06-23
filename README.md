@@ -40,6 +40,8 @@ Each role has restricted permissions similar to real enterprise systems.
   - Donate
   - Resell
   - Upcycle
+  - Disposal
+  - Rebrand
 - Bulk allocation support
 - Allocation history tracking
 
@@ -91,4 +93,4 @@ Each role has restricted permissions similar to real enterprise systems.
 
 This project is licensed under the MIT License.
 
-## 📁 Project Structure
+
