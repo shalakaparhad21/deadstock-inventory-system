@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Deadstock Inventory</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f4f6f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:white;border-radius:16px;padding:48px 40px;box-shadow:0 4px 24px rgba(0,0,0,.1);width:100%;max-width:440px;text-align:center}
+    .icon{font-size:42px;margin-bottom:12px}
+    h1{font-size:24px;font-weight:700;color:#1a1a2e;margin-bottom:6px}
+    p{font-size:14px;color:#666;margin-bottom:36px}
+    .role-btn{display:block;width:100%;padding:14px;margin-bottom:14px;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;transition:all .2s;border:2px solid transparent}
+    .btn-admin{background:#1a1a2e;color:white}.btn-admin:hover{background:#2d2d4e}
+    .btn-branch{background:white;color:#2d6a4f;border-color:#2d6a4f}.btn-branch:hover{background:#f0faf5}
+    .btn-warehouse{background:white;color:#1565c0;border-color:#1565c0}.btn-warehouse:hover{background:#f0f5ff}
+    .btn-stock{background:white;color:#6a1e2d;border-color:#6a1e2d}.btn-stock:hover{background:#fff0f2}
+    .note{font-size:11px;color:#bbb;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">♻</div>
+    <h1>Deadstock Inventory</h1>
+    <p>Fast Fashion Supply Chain Management<br>Select your role to continue</p>
+    <a href="/login/Admin"            class="role-btn btn-admin">Admin</a>
+    <a href="/login/Branch"           class="role-btn btn-branch">Branch Head</a>
+    <a href="/login/Warehouse"        class="role-btn btn-warehouse">Warehouse Head</a>
+    <a href="/login/Stock_Allocation" class="role-btn btn-stock">Stock Allocation Head</a>
+    <p class="note">Accounts are created by the Admin only.</p>
+  </div>
+</body>
+</html>

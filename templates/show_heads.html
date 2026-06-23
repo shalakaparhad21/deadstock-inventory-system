@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Show Heads</title>
+  <style>
+    :root { --bg:#f4f6f9; --surface:#fff; --text:#1a1a2e; --text-muted:#666; --border:#ddd; --primary:#2d6a4f; --hover-bg:#f9fffe; }
+    [data-theme="dark"] { --bg:#0f1117; --surface:#1a1d27; --text:#e8eaf0; --text-muted:#9da3b4; --border:#2c2f3e; --primary:#4ade80; --hover-bg:#222633; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .topbar{background:var(--primary);color:white;display:flex;justify-content:center}
+    .topbar-inner{width:100%;max-width:1200px;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+    .topbar h1{font-size:18px;font-weight:700}
+    .topbar a,.topbar button{color:white;text-decoration:none;background:rgba(255,255,255,.2);padding:6px 14px;border-radius:6px;font-size:13px;border:none;cursor:pointer;font-family:inherit}
+    .search-bar-wrap{margin-bottom:16px}
+    .search-bar-wrap input{width:100%;max-width:420px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface);color:var(--text)}
+    thead th[data-sort="asc"]::after  { content: ' ▲'; font-size: 10px; }
+    thead th[data-sort="desc"]::after { content: ' ▼'; font-size: 10px; }
+    .page{max-width:1200px;margin:0 auto;padding:32px 24px}
+    .back{display:inline-block;margin-bottom:20px;background:var(--primary);color:white;padding:8px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600}
+    .page-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px}
+    .page-title span{color:var(--primary)}
+    .count{font-size:13px;color:var(--text-muted);margin-bottom:16px}
+    .filter-bar{background:var(--surface);border-radius:10px;padding:14px 18px;box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:16px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;border:1px solid var(--border)}
+    .filter-bar .fg{display:flex;flex-direction:column;gap:4px}
+    .filter-bar label{font-size:12px;font-weight:600;color:#555}
+    .filter-bar select,.filter-bar input[type=text]{padding:7px 11px;border:1px solid #ddd;border-radius:7px;font-size:13px;min-width:150px}
+    .filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:#2d6a4f}
+    .fb-btn{padding:8px 16px;background:#2d6a4f;color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;align-self:flex-end}
+    .fb-btn:hover{background:#1e4d37}
+    .fb-clr{padding:8px 14px;font-size:13px;color:#666;text-decoration:none;border:1px solid #ddd;border-radius:7px;align-self:flex-end}
+    .fb-clr:hover{background:#f0f0f0}
+    .table-wrap{background:var(--surface);border-radius:12px;overflow-x:auto;box-shadow:0 2px 10px rgba(0,0,0,.07);border:1px solid var(--border)}
+    table.data-table{width:100%;border-collapse:collapse}
+    thead{background:var(--primary);color:white}
+    th{padding:13px 16px;text-align:left;font-size:13px;font-weight:600;white-space:nowrap}
+    td{padding:12px 16px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap}
+    tr:hover td{background:var(--hover-bg)}
+    .empty{text-align:center;padding:48px;color:#aaa;font-size:14px}
+    .upd-btn{padding:5px 12px;background:#fff8e1;color:#795500;border:1px solid #ffe082;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none}
+    .upd-btn:hover{background:#fff3cd}
+    .role-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+    .role-Branch{background:#e8f5e9;color:#2d6a4f;border:1px solid #a5d6a7}
+    .role-Warehouse{background:#e3f2fd;color:#1565c0;border:1px solid #90caf9}
+    .role-Stock_Allocation{background:#fce4ec;color:#880e4f;border:1px solid #f48fb1}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1>♻ Deadstock Inventory</h1>
+    <div style="display:flex;gap:10px">
+      <button id="dark-toggle"><span id="dark-icon">🌙</span></button>
+      <a href="/dashboard">← Dashboard</a>
+    </div>
+  </div>
+</div>
+<div class="page">
+  <a href="/dashboard" class="back">← Dashboard</a>
+  <div class="page-title">Table: <span>HEAD</span></div>
+  <div class="count">{{ rows|length }} record(s) found</div>
+
+  {% if rows %}
+  <div class="search-bar-wrap">
+    <input id="live-search" type="text" placeholder="Search anything in this table..." autocomplete="off">
+  </div>
+  {% endif %}
+
+  <form class="filter-bar" method="GET" action="/show/heads">
+    <div class="fg">
+      <label>Role</label>
+      <select name="f_role">
+        <option value="">All Roles</option>
+        {% for r in all_roles %}
+        <option value="{{ r }}" {% if f_role==r %}selected{% endif %}>{{ r|replace('_',' ') }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="fg">
+      <label>Name Search</label>
+      <input type="text" name="f_name" value="{{ f_name }}" placeholder="Search by name…">
+    </div>
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/heads">Clear</a>
+  </form>
+
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Head ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Contacts</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          <td>{{ row[1] }}</td>
+          <td>{{ row[2] }}</td>
+          <td><span class="role-badge role-{{ row[3] }}">{{ row[3]|replace('_',' ') }}</span></td>
+          <td>{{ row[4] or '—' }}</td>
+          <td><a href="/update_head/{{ row[0] }}" class="upd-btn">Update Password</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No heads found matching the selected filters.</div>
+    {% endif %}
+  </div>
+</div>
+<script>
+const toggle = document.getElementById('dark-toggle');
+const icon = document.getElementById('dark-icon');
+const saved = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
+toggle?.addEventListener('click', () => {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  icon.textContent = next === 'dark' ? '☀️' : '🌙';
+});
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('live-search');
+  const table = document.querySelector('table.data-table');
+  if (!searchInput || !table) return;
+  searchInput.addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    table.querySelectorAll('tbody tr').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+  table.querySelectorAll('thead th').forEach((th, colIdx) => {
+    th.style.cursor = 'pointer';
+    th.title = 'Click to sort';
+    let asc = true;
+    th.addEventListener('click', function () {
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const aVal = a.cells[colIdx]?.textContent.trim() || '';
+        const bVal = b.cells[colIdx]?.textContent.trim() || '';
+        const aNum = parseFloat(aVal), bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum - bNum : bNum - aNum;
+        return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      table.querySelectorAll('thead th').forEach(h => h.dataset.sort = '');
+      th.dataset.sort = asc ? 'asc' : 'desc';
+      asc = !asc;
+    });
+  });
+});
+</script>
+</body>
+</html>

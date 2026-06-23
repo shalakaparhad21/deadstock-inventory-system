@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>{{ table_name }}</title>
+  <style>
+    :root {
+      --bg:        #f4f6f9;
+      --surface:   #ffffff;
+      --text:      #1a1a2e;
+      --text-muted:#666;
+      --border:    #ddd;
+      --primary:   #2d6a4f;
+      --primary-dark:#1e4d37;
+      --hover-bg:  #f9fffe;
+    }
+    [data-theme="dark"] {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --text:      #e8eaf0;
+      --text-muted:#9da3b4;
+      --border:    #2c2f3e;
+      --primary:   #4ade80;
+      --primary-dark:#22c55e;
+      --hover-bg:  #222633;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+    .topbar{background:var(--primary);color:white;display:flex;justify-content:center}
+    .topbar-inner{width:100%;max-width:1200px;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+    .topbar h1{font-size:18px;font-weight:700}
+    .topbar a,.topbar-actions button{color:white;text-decoration:none;background:rgba(255,255,255,.2);padding:6px 14px;border-radius:6px;font-size:13px;border:none;cursor:pointer;font-family:inherit}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .page{max-width:1200px;margin:0 auto;padding:32px 24px}
+    .back{display:inline-block;margin-bottom:20px;background:var(--primary);color:white;padding:8px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600}
+    .back:hover{opacity:.9}
+    .page-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px}
+    .page-title span{color:var(--primary)}
+    .count{font-size:13px;color:var(--text-muted);margin-bottom:16px}
+    .search-bar-wrap{margin-bottom:16px}
+    .search-bar-wrap input{width:100%;max-width:420px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface);color:var(--text)}
+    .search-bar-wrap input:focus{outline:none;border-color:var(--primary)}
+    .filter-bar{background:var(--surface);border-radius:10px;padding:14px 18px;box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:16px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;border:1px solid var(--border)}
+    .filter-bar .fg{display:flex;flex-direction:column;gap:4px}
+    .filter-bar label{font-size:12px;font-weight:600;color:var(--text-muted)}
+    .filter-bar select,.filter-bar input[type=text]{padding:7px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:130px;background:var(--surface);color:var(--text)}
+    .filter-bar select:focus,.filter-bar input:focus{outline:none;border-color:var(--primary)}
+    .fb-btn{padding:8px 16px;background:var(--primary);color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;align-self:flex-end}
+    .fb-clr{padding:8px 14px;font-size:13px;color:var(--text-muted);text-decoration:none;border:1px solid var(--border);border-radius:7px;align-self:flex-end;background:var(--surface)}
+    .sa-info{background:#fffde7;border-radius:10px;padding:14px 18px;margin-bottom:16px;border:1px solid #ffe082;font-size:13px;color:#795500}
+    [data-theme="dark"] .sa-info{background:#2a2618;color:#e6c200;border-color:#5c4d00}
+    .table-wrap{background:var(--surface);border-radius:12px;overflow-x:auto;box-shadow:0 2px 10px rgba(0,0,0,.07);border:1px solid var(--border)}
+    table.data-table{width:100%;border-collapse:collapse}
+    thead{background:var(--primary);color:white}
+    th{padding:13px 16px;text-align:left;font-size:13px;font-weight:600;white-space:nowrap}
+    thead th[data-sort="asc"]::after  { content: ' ▲'; font-size: 10px; }
+    thead th[data-sort="desc"]::after { content: ' ▼'; font-size: 10px; }
+    td{padding:12px 16px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);white-space:nowrap}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--hover-bg)}
+    .empty{text-align:center;padding:48px;color:var(--text-muted);font-size:14px}
+    .del-btn{background:#fde8e8;color:#922;border:1px solid #f5c6c6;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+    .upd-btn{background:#fff8e1;color:#795500;border:1px solid #ffe082;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;display:inline-block}
+    .send-btn{background:#e8f5e9;color:#2d6a4f;border:1px solid #a5d6a7;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+    .alloc-btn{padding:4px 9px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;margin:2px;border:none}
+    .alloc-recycle{background:#e8f5e9;color:#2d6a4f;border:1px solid #a5d6a7}
+    .alloc-donate{background:#e3f2fd;color:#1565c0;border:1px solid #90caf9}
+    .alloc-resell{background:#fff3e0;color:#e65100;border:1px solid #ffcc80}
+    .alloc-upcycle{background:#fce4ec;color:#880e4f;border:1px solid #f48fb1}
+    .alloc-rebrand{background:#ede7f6;color:#4a148c;border:1px solid #ce93d8}
+    .alloc-disposal{background:#eceff1;color:#37474f;border:1px solid #b0bec5}
+    .sent-label{color:var(--text-muted);font-size:12px}
+    .allocated-label{color:var(--primary);font-size:12px;font-weight:600}
+    .action-cell{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .deleted-badge{display:inline-block;padding:4px 10px;background:#eceff1;color:#546e7a;border:1px solid #b0bec5;border-radius:6px;font-size:11px;font-weight:700}
+    tr.deleted-branch-row td{background:var(--hover-bg);color:var(--text-muted)}
+    .del-branch-tag{display:inline-block;font-size:10px;font-weight:700;background:#eceff1;color:#546e7a;border:1px solid #cfd8dc;border-radius:4px;padding:1px 6px;margin-left:4px}
+    .sku-badge{display:inline-block;font-family:Consolas,'Courier New',monospace;font-size:11px;font-weight:700;background:#e8f5e9;color:#2d6a4f;border:1px solid #a5d6a7;border-radius:4px;padding:2px 8px;letter-spacing:.3px}
+    [data-theme="dark"] .sku-badge{background:#1a2e22;color:#4ade80;border-color:#2d6a4f}
+    tr.age-fresh  td { background-color: #d4edda !important; }
+    tr.age-warning td { background-color: #fff3cd !important; }
+    tr.age-old    td { background-color: #f8d7da !important; }
+    tr.age-fresh:hover  td { background-color: #c3e6cb !important; }
+    tr.age-warning:hover td { background-color: #ffeaa7 !important; }
+    tr.age-old:hover    td { background-color: #f5c6cb !important; }
+    .age-legend{margin-top:14px;font-size:12px;color:var(--text-muted);display:flex;gap:18px;flex-wrap:wrap}
+    .legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+    .legend-dot.green{background:#2d6a4f}
+    .legend-dot.yellow{background:#e6ac00}
+    .legend-dot.red{background:#c0392b}
+    .capacity-wrap{margin:4px 0;min-width:160px}
+    .capacity-track{background:#e0e0e0;border-radius:8px;height:14px;overflow:hidden;margin:4px 0}
+    .capacity-fill{height:100%;border-radius:8px;transition:width .4s ease}
+    .cap-ok{background:#2d6a4f}
+    .cap-warning{background:#e6ac00}
+    .cap-critical{background:#c0392b}
+    .capacity-label{display:flex;justify-content:space-between;font-size:12px}
+    .capacity-pct{font-size:11px;color:var(--text-muted);text-align:right}
+    .btn-bulk{margin-top:14px;padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+    .btn-bulk:disabled{opacity:.5;cursor:not-allowed}
+    .bulk-bar{margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .bulk-bar select{padding:8px 12px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text)}
+    .qr-btn{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:14px}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center}
+    .modal.open{display:flex}
+    .modal-box{background:var(--surface);border-radius:14px;padding:24px;text-align:center;max-width:320px;border:1px solid var(--border)}
+    .modal-box img{max-width:220px;margin:12px 0}
+    .modal-close{margin-top:8px;padding:8px 20px;background:var(--primary);color:white;border:none;border-radius:7px;cursor:pointer}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1>♻ Deadstock Inventory</h1>
+    <div class="topbar-actions">
+      <button id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode"><span id="dark-icon">🌙</span></button>
+      <a href="/dashboard">← Dashboard</a>
+    </div>
+  </div>
+</div>
+<div class="page">
+  <a href="/dashboard" class="back">← Dashboard</a>
+  <div class="page-title">Table: <span>{{ table_name }}</span></div>
+  <div class="count">{{ rows|length }} record(s) found</div>
+
+  {% if branch_delete_error %}
+  <div style="margin-bottom:16px;padding:14px 18px;background:#fde8e8;color:#922;border:1px solid #f5c6c6;border-radius:10px;font-size:13px;font-weight:500">
+    ⚠ {{ branch_delete_error }}
+  </div>
+  {% endif %}
+
+  {% if rows %}
+  <div class="search-bar-wrap">
+    <input id="live-search" type="text" placeholder="Search anything in this table..." autocomplete="off">
+  </div>
+  {% endif %}
+
+  {# FILTER BARS #}
+  {% if table_name == 'BRANCH' and session['role'] == 'Admin' %}
+  <form class="filter-bar" method="GET">
+    <div class="fg"><label>City</label>
+      <select name="f_city">
+        <option value="">All Cities</option>
+        {% for c in all_cities_br %}<option value="{{ c }}" {% if f_city==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/BRANCH">Clear</a>
+  </form>
+  {% endif %}
+
+  {% if table_name == 'BRANCH' and session['role'] == 'Warehouse' %}
+  <form class="filter-bar" method="GET">
+    <div class="fg"><label>Filter by City</label>
+      <select name="f_city">
+        <option value="">All Cities</option>
+        {% for c in all_cities_br %}<option value="{{ c }}" {% if f_city==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/BRANCH">Clear</a>
+  </form>
+  {% endif %}
+
+  {% if table_name == 'WAREHOUSE' and session['role'] == 'Admin' %}
+  <form class="filter-bar" method="GET">
+    <div class="fg"><label>City</label>
+      <select name="f_city">
+        <option value="">All Cities</option>
+        {% for c in all_cities_wh %}<option value="{{ c }}" {% if f_city==c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/WAREHOUSE">Clear</a>
+  </form>
+  {% endif %}
+
+  {% if table_name == 'DEADSTOCK' %}
+  <form class="filter-bar" method="GET">
+    {% if session['role'] == 'Admin' %}
+    <div class="fg"><label>Branch</label>
+      <select name="f_branch">
+        <option value="">All Branches</option>
+        {% for b in all_branches %}<option value="{{ b[0] }}" {% if f_branch|string==b[0]|string %}selected{% endif %}>{{ b[0] }} – {{ b[1] }}</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <div class="fg"><label>SKU</label>
+      <input type="text" name="f_sku" value="{{ f_sku }}" placeholder="e.g. KURTAS-2-XL">
+    </div>
+    <div class="fg"><label>Category</label>
+      <input type="text" name="f_category" value="{{ f_category }}" placeholder="e.g. T-Shirts">
+    </div>
+    <div class="fg"><label>Size</label>
+      <select name="f_size">
+        <option value="">All Sizes</option>
+        {% for s in all_sizes %}<option value="{{ s }}" {% if f_size==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    {% if session['role'] in ['Admin','Stock_Allocation'] %}
+    <div class="fg"><label>Allocated Type</label>
+      <select name="f_alloc">
+        <option value="">All</option>
+        <option value="__none__" {% if f_alloc=='__none__' %}selected{% endif %}>Not Allocated</option>
+        {% for a in all_alloc %}<option value="{{ a }}" {% if f_alloc==a %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    {% if session['role'] == 'Admin' %}
+    <div class="fg"><label>Sent to WH</label>
+      <select name="f_sent_wh">
+        <option value="">Any</option>
+        <option value="1" {% if f_sent_wh=='1' %}selected{% endif %}>Yes</option>
+        <option value="0" {% if f_sent_wh=='0' %}selected{% endif %}>No</option>
+      </select>
+    </div>
+    <div class="fg"><label>Sent to SA</label>
+      <select name="f_sent_sa">
+        <option value="">Any</option>
+        <option value="1" {% if f_sent_sa=='1' %}selected{% endif %}>Yes</option>
+        <option value="0" {% if f_sent_sa=='0' %}selected{% endif %}>No</option>
+      </select>
+    </div>
+    {% endif %}
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/DEADSTOCK">Clear</a>
+  </form>
+  {% endif %}
+
+  {% if table_name == 'STOCK_ALLOCATION' %}
+  <form class="filter-bar" method="GET">
+    <div class="fg"><label>Branch</label>
+      <select name="f_branch">
+        <option value="">All Branches</option>
+        {% for b in all_branches %}<option value="{{ b[0] }}" {% if f_branch|string==b[0]|string %}selected{% endif %}>{{ b[0] }} – {{ b[1] }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="fg"><label>Allocation Type</label>
+      <select name="f_alloc">
+        <option value="">All Types</option>
+        {% for a in all_alloc %}<option value="{{ a }}" {% if f_alloc==a %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/STOCK_ALLOCATION">Clear</a>
+  </form>
+  {% endif %}
+
+  {% if table_name == 'CONTACTS' %}
+  <form class="filter-bar" method="GET">
+    <div class="fg"><label>Role</label>
+      <select name="f_role">
+        <option value="">All Roles</option>
+        {% for r in all_roles %}<option value="{{ r }}" {% if f_role==r %}selected{% endif %}>{{ r|replace('_',' ') }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/CONTACTS">Clear</a>
+  </form>
+  {% endif %}
+
+  {% if table_name == 'MATERIAL' %}
+  <form class="filter-bar" method="GET">
+    <div class="fg"><label>Sustainability Quality</label>
+      <select name="f_sq">
+        <option value="">All</option>
+        {% for q in all_sq %}<option value="{{ q }}" {% if f_sq==q %}selected{% endif %}>{{ q }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fb-btn" type="submit">Filter</button>
+    <a class="fb-clr" href="/show/MATERIAL">Clear</a>
+  </form>
+  {% endif %}
+
+  {% if session['role'] == 'Stock_Allocation' and table_name == 'DEADSTOCK' %}
+  <div class="sa-info">
+    <strong>Allocate items below:</strong> Select rows and choose an allocation type, or use per-row buttons.
+  </div>
+  {% endif %}
+
+  {% set bulk_branch = (table_name=='DEADSTOCK' and session['role']=='Branch') %}
+  {% set bulk_warehouse = (table_name=='DEADSTOCK' and session['role']=='Warehouse') %}
+  {% set bulk_sa = (table_name=='DEADSTOCK' and session['role']=='Stock_Allocation') %}
+
+  {% if bulk_branch %}
+  <form id="bulk-form" method="POST" action="{{ url_for('bulk_send_warehouse') }}">
+  {% elif bulk_warehouse %}
+  <form id="bulk-form" method="POST" action="{{ url_for('bulk_send_sa') }}">
+  {% elif bulk_sa %}
+  <form id="bulk-form" method="POST" action="{{ url_for('bulk_allocate') }}">
+  {% endif %}
+
+  <div class="table-wrap">
+    {% if rows %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          {% if bulk_branch or bulk_warehouse or bulk_sa %}<th><input type="checkbox" id="select-all" title="Select all eligible"></th>{% endif %}
+          {% for h in headers %}<th>{{ h }}</th>{% endfor %}
+          {% if table_name == 'DEADSTOCK' %}<th>QR</th>{% endif %}
+          {% if (table_name in ['BRANCH','WAREHOUSE'] and session['role']=='Admin')
+              or (table_name=='DEADSTOCK' and session['role'] in ['Branch','Warehouse','Stock_Allocation']) %}
+          <th>Action</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        {% set idx = loop.index0 %}
+
+        {% if table_name=='BRANCH' and session['role']=='Admin' %}
+        {% set is_deleted = (row|length > 6 and row[6] == 1) %}
+        <tr {% if is_deleted %}style="opacity:.7"{% endif %}>
+          {% for cell in row[:6] %}<td>{{ cell if cell is not none else '—' }}</td>{% endfor %}
+          <td>
+            {% if is_deleted %}<span class="deleted-badge">✕ Deleted</span>
+            {% else %}
+            <form method="POST" action="/delete/branch/{{ row[0] }}"
+                  onsubmit="return confirm('Delete Branch #{{ row[0] }}?')" style="display:inline">
+              <button type="submit" class="del-btn">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+
+        {% elif table_name=='WAREHOUSE' and session['role']=='Admin' %}
+        {% set wh_cap = row[4]|int %}
+        {% set wh_cur = row[5]|int if row|length > 5 else 0 %}
+        {% set wh_pct = [((wh_cur / wh_cap * 100)|int), 100]|min if wh_cap > 0 else 0 %}
+        <tr>
+          {% for cell in row[:5] %}<td>{{ cell if cell is not none else '—' }}</td>{% endfor %}
+          <td>
+            <div class="capacity-wrap">
+              <div class="capacity-label"><span>{{ row[2] }}</span><span>{{ wh_cur }} / {{ wh_cap }} units</span></div>
+              <div class="capacity-track">
+                <div class="capacity-fill {% if wh_pct >= 90 %}cap-critical{% elif wh_pct >= 70 %}cap-warning{% else %}cap-ok{% endif %}"
+                     style="width: {{ wh_pct }}%"></div>
+              </div>
+              <div class="capacity-pct">{{ wh_pct }}% full</div>
+            </div>
+          </td>
+          <td>
+            <div class="action-cell">
+              <a href="/update_warehouse/{{ row[0] }}" class="upd-btn">Update</a>
+              <form method="POST" action="/delete/warehouse/{{ row[0] }}" style="display:inline"
+                    onsubmit="return confirm('Proceed to reassign branches?')">
+                <button type="submit" class="del-btn">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+
+        {% elif table_name=='WAREHOUSE' and session['role']=='Warehouse' %}
+        {% set wh_cap = row[4]|int %}
+        {% set wh_cur = row[5]|int if row|length > 5 else 0 %}
+        {% set wh_pct = [((wh_cur / wh_cap * 100)|int), 100]|min if wh_cap > 0 else 0 %}
+        <tr>
+          {% for cell in row[:5] %}<td>{{ cell if cell is not none else '—' }}</td>{% endfor %}
+          <td>
+            <div class="capacity-wrap">
+              <div class="capacity-label"><span>{{ row[2] }}</span><span>{{ wh_cur }} / {{ wh_cap }} units</span></div>
+              <div class="capacity-track">
+                <div class="capacity-fill {% if wh_pct >= 90 %}cap-critical{% elif wh_pct >= 70 %}cap-warning{% else %}cap-ok{% endif %}"
+                     style="width: {{ wh_pct }}%"></div>
+              </div>
+              <div class="capacity-pct">{{ wh_pct }}% full</div>
+            </div>
+          </td>
+        </tr>
+
+        {% elif table_name=='DEADSTOCK' and session['role']=='Branch' %}
+        <tr class="{{ age_classes[idx] if age_classes else '' }}">
+          <td>{% if row[8] == 0 %}<input type="checkbox" name="ids" value="{{ row[0] }}">{% else %}<span class="sent-label">—</span>{% endif %}</td>
+          <td>{{ row[0] }}</td>
+          <td><span class="sku-badge">{{ row[1] or '—' }}</span></td>
+          <td>{{ row[2] }}</td><td>{{ row[3] }}</td><td>{{ row[4] }}</td><td>{{ row[5] }}</td><td>{{ row[6] }}</td>
+          <td>{{ row[7] if row[7] is not none else '—' }}</td>
+          <td>{{ days_list[idx] if days_list and days_list[idx] is not none else '—' }}</td>
+          <td>{{ row[8] }}</td><td>{{ row[9] }}</td><td>{{ row[10] if row[10] is not none else '—' }}</td>
+          <td><button type="button" class="qr-btn" onclick="openQr({{ row[0] }})" title="View QR">▣</button></td>
+          <td>
+            {% if row[8] == 0 %}
+            <form method="POST" action="/send_to_warehouse/{{ row[0] }}"
+                  onsubmit="return confirm('Send this item to the warehouse?')">
+              <button type="submit" class="send-btn">Send to Warehouse</button>
+            </form>
+            {% else %}<span class="sent-label">Sent ✓</span>{% endif %}
+          </td>
+        </tr>
+
+        {% elif table_name=='DEADSTOCK' and session['role']=='Warehouse' %}
+        {% set is_deleted_br = (row[3] == 'Deleted Branch' or row[3] is none) %}
+        {% set can_send_sa = (row[9] == 1 and row[10] == 0) %}
+        <tr class="{{ age_classes[idx] if age_classes else '' }}{% if is_deleted_br %} deleted-branch-row{% endif %}">
+          <td>{% if can_send_sa %}<input type="checkbox" name="ids" value="{{ row[0] }}">{% else %}<span class="sent-label">—</span>{% endif %}</td>
+          <td>{{ row[0] }}</td>
+          <td><span class="sku-badge">{{ row[1] or '—' }}</span></td>
+          <td>{{ row[2] }}</td>
+          <td>{{ row[3] if row[3] else '—' }}{% if is_deleted_br %}<span class="del-branch-tag">DELETED</span>{% endif %}</td>
+          <td>{{ row[4] }}</td><td>{{ row[5] }}</td><td>{{ row[6] }}</td><td>{{ row[7] }}</td>
+          <td>{{ row[8] if row[8] is not none else '—' }}</td>
+          <td>{{ days_list[idx] if days_list and days_list[idx] is not none else '—' }}</td>
+          <td>{{ row[9] }}</td><td>{{ row[10] }}</td>
+          <td><button type="button" class="qr-btn" onclick="openQr({{ row[0] }})" title="View QR">▣</button></td>
+          <td>
+            {% if row[10] == 0 %}
+            <form method="POST" action="/send_to_sa/{{ row[0] }}"
+                  onsubmit="return confirm('Send to Stock Allocation Head?')">
+              <button type="submit" class="send-btn">Send to SA</button>
+            </form>
+            {% else %}<span class="sent-label">Sent ✓</span>{% endif %}
+          </td>
+        </tr>
+
+        {% elif table_name=='DEADSTOCK' and session['role']=='Admin' %}
+        {% set is_deleted_br = (row[3] == 'Deleted Branch' or row[3] is none) %}
+        <tr class="{{ age_classes[idx] if age_classes else '' }}{% if is_deleted_br %} deleted-branch-row{% endif %}">
+          <td>{{ row[0] }}</td>
+          <td><span class="sku-badge">{{ row[1] or '—' }}</span></td>
+          <td>{{ row[2] }}</td>
+          <td>{{ row[3] if row[3] else '—' }}{% if is_deleted_br %}<span class="del-branch-tag">DELETED</span>{% endif %}</td>
+          <td>{{ row[4] }}</td><td>{{ row[5] }}</td><td>{{ row[6] }}</td><td>{{ row[7] }}</td>
+          <td>{{ row[8] if row[8] is not none else '—' }}</td>
+          <td>{{ days_list[idx] if days_list and days_list[idx] is not none else '—' }}</td>
+          <td>{{ row[9] }}</td><td>{{ row[10] }}</td><td>{{ row[11] if row[11] is not none else '—' }}</td>
+          <td><button type="button" class="qr-btn" onclick="openQr({{ row[0] }})" title="View QR">▣</button></td>
+        </tr>
+
+        {% elif table_name=='DEADSTOCK' and session['role']=='Stock_Allocation' %}
+        <tr class="{{ age_classes[idx] if age_classes else '' }}">
+          {% if row[10] is none %}<td><input type="checkbox" name="ids" value="{{ row[0] }}"></td>{% else %}<td></td>{% endif %}
+          <td>{{ row[0] }}</td>
+          <td><span class="sku-badge">{{ row[1] or '—' }}</span></td>
+          <td>{{ row[2] }}</td><td>{{ row[3] }}</td><td>{{ row[4] }}</td><td>{{ row[5] }}</td><td>{{ row[6] }}</td>
+          <td>{{ row[7] if row[7] is not none else '—' }}</td>
+          <td>{{ days_list[idx] if days_list and days_list[idx] is not none else '—' }}</td>
+          <td>{{ row[8] }}</td><td>{{ row[9] }}</td><td>{{ row[10] if row[10] is not none else '—' }}</td>
+          <td><button type="button" class="qr-btn" onclick="openQr({{ row[0] }})" title="View QR">▣</button></td>
+          <td>
+            {% if row[10] is none %}
+            <form method="POST" action="/allocate/{{ row[0] }}" style="display:inline">
+              <button type="submit" name="alloc_type" value="Recycle"  class="alloc-btn alloc-recycle">Recycle</button>
+              <button type="submit" name="alloc_type" value="Donate"   class="alloc-btn alloc-donate">Donate</button>
+              <button type="submit" name="alloc_type" value="Resell"   class="alloc-btn alloc-resell">Resell</button>
+              <button type="submit" name="alloc_type" value="Upcycle"  class="alloc-btn alloc-upcycle">Upcycle</button>
+              <button type="submit" name="alloc_type" value="Rebrand"  class="alloc-btn alloc-rebrand">Rebrand</button>
+              <button type="submit" name="alloc_type" value="Disposal" class="alloc-btn alloc-disposal">Disposal</button>
+            </form>
+            {% else %}<span class="allocated-label">{{ row[10] }} ✓</span>{% endif %}
+          </td>
+        </tr>
+
+        {% else %}
+        <tr>
+          {% for cell in row %}<td>{{ cell if cell is not none else '—' }}</td>{% endfor %}
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No records found in {{ table_name }}.</div>
+    {% endif %}
+  </div>
+
+  {% if bulk_branch %}
+  <button type="submit" class="btn-bulk" id="bulk-btn" disabled>
+    Send Selected to Warehouse (<span id="selected-count">0</span>)
+  </button>
+  </form>
+  {% elif bulk_warehouse %}
+  <button type="submit" class="btn-bulk" id="bulk-btn" disabled>
+    Send Selected to Stock Allocation (<span id="selected-count">0</span>)
+  </button>
+  </form>
+  {% elif bulk_sa %}
+  <div class="bulk-bar">
+    <select name="alloc_type" required>
+      <option value="">— Allocation Type —</option>
+      {% for a in all_alloc %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn-bulk" id="bulk-btn" disabled>
+      Allocate Selected (<span id="selected-count">0</span>)
+    </button>
+  </div>
+  </form>
+  {% endif %}
+
+  {% if table_name == 'DEADSTOCK' %}
+  <div class="age-legend" style="margin-top:12px;display:flex;gap:20px;font-size:13px;align-items:center;">
+    <span><span style="display:inline-block;width:14px;height:14px;background:#d4edda;border-radius:3px;margin-right:5px;vertical-align:middle;"></span>Fresh (≤30 days)</span>
+    <span><span style="display:inline-block;width:14px;height:14px;background:#fff3cd;border-radius:3px;margin-right:5px;vertical-align:middle;"></span>Aging (31–90 days)</span>
+    <span><span style="display:inline-block;width:14px;height:14px;background:#f8d7da;border-radius:3px;margin-right:5px;vertical-align:middle;"></span>Old (&gt;90 days)</span>
+  </div>
+  {% endif %}
+</div>
+
+<div class="modal" id="qr-modal">
+  <div class="modal-box">
+    <h3 style="font-size:15px;margin-bottom:8px">Deadstock QR Code</h3>
+    <img id="qr-img" src="" alt="QR Code">
+    <br><button type="button" class="modal-close" onclick="closeQr()">Close</button>
+  </div>
+</div>
+
+<script>
+const toggle = document.getElementById('dark-toggle');
+const icon   = document.getElementById('dark-icon');
+const saved  = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
+toggle?.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  icon.textContent = next === 'dark' ? '☀️' : '🌙';
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('live-search');
+  const table = document.querySelector('table.data-table');
+  if (!searchInput || !table) return;
+
+  searchInput.addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    table.querySelectorAll('tbody tr').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+
+  table.querySelectorAll('thead th').forEach((th, colIdx) => {
+    th.style.cursor = 'pointer';
+    th.title = 'Click to sort';
+    let asc = true;
+    th.addEventListener('click', function () {
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const aVal = a.cells[colIdx]?.textContent.trim() || '';
+        const bVal = b.cells[colIdx]?.textContent.trim() || '';
+        const aNum = parseFloat(aVal), bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum - bNum : bNum - aNum;
+        return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      table.querySelectorAll('thead th').forEach(h => h.dataset.sort = '');
+      th.dataset.sort = asc ? 'asc' : 'desc';
+      asc = !asc;
+    });
+  });
+});
+
+document.querySelectorAll('input[name="ids"]').forEach(cb => {
+  cb.addEventListener('change', updateBulkBtn);
+});
+document.getElementById('select-all')?.addEventListener('change', function () {
+  document.querySelectorAll('input[name="ids"]').forEach(cb => {
+    if (!cb.disabled) cb.checked = this.checked;
+  });
+  updateBulkBtn();
+});
+function updateBulkBtn() {
+  const count = document.querySelectorAll('input[name="ids"]:checked').length;
+  const btn = document.getElementById('bulk-btn');
+  const counter = document.getElementById('selected-count');
+  if (btn) btn.disabled = count === 0;
+  if (counter) counter.textContent = count;
+}
+
+function openQr(id) {
+  document.getElementById('qr-img').src = '/qr/' + id + '?t=' + Date.now();
+  document.getElementById('qr-modal').classList.add('open');
+}
+function closeQr() {
+  document.getElementById('qr-modal').classList.remove('open');
+}
+document.getElementById('qr-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeQr();
+});
+</script>
+</body>
+</html>

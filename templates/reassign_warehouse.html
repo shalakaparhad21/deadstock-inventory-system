@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Reassign Branches – Delete Warehouse</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f4f6f9;min-height:100vh}
+    .topbar{background:#2d6a4f;color:white;display:flex;justify-content:center}
+    .topbar-inner{width:100%;max-width:1200px;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+    .topbar h1{font-size:18px;font-weight:700}
+    .topbar a{color:white;text-decoration:none;background:rgba(255,255,255,.2);padding:6px 14px;border-radius:6px;font-size:13px}
+    .page{max-width:800px;margin:0 auto;padding:32px 24px}
+    .back{display:inline-block;margin-bottom:20px;background:#2d6a4f;color:white;padding:8px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600}
+    .back:hover{background:#1e4d37}
+    .page-title{font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:6px}
+    .page-sub{font-size:13px;color:#888;margin-bottom:24px}
+    .warn-box{background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:16px 20px;margin-bottom:20px;font-size:13px;color:#795500;line-height:1.8}
+    .warn-box strong{color:#e65100}
+    .info-box{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#2d6a4f;line-height:1.7}
+    .card{background:white;border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:20px}
+    .card h3{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0}
+    .branch-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid #f4f4f4;flex-wrap:wrap}
+    .branch-row:last-child{border-bottom:none}
+    .branch-label{font-size:13px;font-weight:600;color:#333;min-width:200px}
+    .branch-label span{display:block;font-size:11px;color:#888;font-weight:400;margin-top:2px}
+    .branch-row select{flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:7px;font-size:13px;min-width:180px}
+    .branch-row select:focus{outline:none;border-color:#2d6a4f}
+    .no-branches{text-align:center;color:#aaa;padding:24px;font-size:14px}
+    .btn-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+    .btn-confirm{padding:12px 28px;background:#c0392b;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
+    .btn-confirm:hover{background:#a93226}
+    .btn-cancel{padding:12px 20px;background:#e8f5e9;color:#2d6a4f;border:1px solid #a5d6a7;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;display:inline-block}
+    .btn-cancel:hover{background:#c8e6c9}
+    .msg{margin-top:16px;padding:12px;border-radius:8px;text-align:center;font-size:14px;font-weight:500}
+    .success{background:#d4edda;color:#1a5c35;border:1px solid #a8d5b5}
+    .error{background:#fde8e8;color:#922;border:1px solid #f5c6c6}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1>♻ Deadstock Inventory</h1>
+    <a href="/dashboard">← Dashboard</a>
+  </div>
+</div>
+<div class="page">
+  <a href="/show/WAREHOUSE" class="back">← Back to Warehouses</a>
+  <div class="page-title">Delete Warehouse — Reassign Branches</div>
+  <p class="page-sub">Before deleting this warehouse, reassign each of its branches to another warehouse.</p>
+
+  {% if warehouse %}
+  <div class="warn-box">
+    <strong>⚠ Warning:</strong> You are about to delete
+    <strong>Warehouse #{{ warehouse[0] }} – {{ warehouse[2] }}</strong>.<br>
+    • Each branch must be reassigned to another warehouse.<br>
+    • Deadstock <strong>still at this warehouse</strong> (received but not yet sent to SA) will be
+      automatically forwarded to the Stock Allocation Head.<br>
+    • Deadstock <strong>already sent to SA or allocated</strong> remains unchanged.<br>
+    • Deadstock <strong>still at branches</strong> (not yet sent to warehouse) will stay at those
+      branches — now under the new warehouse you assign.<br>
+    • The warehouse head will <strong>not be able to login</strong> after deletion.
+  </div>
+
+  {% if not branches %}
+  <div class="info-box">
+    ✓ No branches are currently assigned to this warehouse. You can safely proceed to delete it.
+  </div>
+  {% endif %}
+
+  <form method="POST">
+    <div class="card">
+      <h3>Reassign Branches ({{ branches|length }} branch{{ 'es' if branches|length != 1 else '' }})</h3>
+      {% if branches %}
+        {% for b in branches %}
+        <div class="branch-row">
+          <div class="branch-label">
+            Branch #{{ b[0] }}
+            <span>{{ b[1] }}</span>
+          </div>
+          <select name="new_warehouse_{{ b[0] }}" required>
+            <option value="">-- Select New Warehouse --</option>
+            {% for w in other_warehouses %}
+            <option value="{{ w[0] }}">{{ w[0] }} – {{ w[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="no-branches">No branches to reassign.</div>
+      {% endif %}
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn-confirm"
+        onclick="return confirm('Are you sure? Warehouse #{{ warehouse[0] }} will be permanently deleted.')">
+        Confirm Delete &amp; Reassign
+      </button>
+      <a href="/show/WAREHOUSE" class="btn-cancel">Cancel</a>
+    </div>
+  </form>
+
+  {% if msg %}<div class="msg {{ msg[0] }}">{{ msg[1] }}</div>{% endif %}
+  {% endif %}
+</div>
+</body>
+</html>

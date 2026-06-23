@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Admin – Branch-wise Report</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f4f6f9;min-height:100vh}
+    .topbar{background:#2d6a4f;color:white;display:flex;justify-content:center}
+    .topbar-inner{width:100%;max-width:1200px;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+    .topbar h1{font-size:18px;font-weight:700}
+    .topbar a{color:white;text-decoration:none;background:rgba(255,255,255,.2);padding:6px 14px;border-radius:6px;font-size:13px}
+    .page{max-width:1200px;margin:0 auto;padding:32px 24px}
+    .back{display:inline-block;margin-bottom:20px;background:#2d6a4f;color:white;padding:8px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600}
+    .back:hover{background:#1e4d37}
+    .page-title{font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:6px}
+    .page-sub{font-size:13px;color:#888;margin-bottom:24px}
+    .card{background:white;border-radius:12px;padding:20px 24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:24px;overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead{background:#2d6a4f;color:white}
+    th{padding:12px 14px;text-align:left;font-weight:600;white-space:nowrap}
+    td{padding:11px 14px;border-bottom:1px solid #f0f0f0;color:#333;white-space:nowrap}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#f9fffe}
+    .empty{text-align:center;padding:48px;color:#aaa;font-size:14px}
+    .total-row td{font-weight:700;background:#f0faf5;color:#1a1a2e;border-top:2px solid #2d6a4f}
+    .badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+    .b-resell{background:#fff3e0;color:#e65100}
+    .b-recycle{background:#e8f5e9;color:#2d6a4f}
+    .b-donate{background:#e3f2fd;color:#1565c0}
+    .b-upcycle{background:#fce4ec;color:#880e4f}
+    .b-rebrand{background:#ede7f6;color:#4a148c}
+    .b-dispose{background:#eceff1;color:#37474f}
+    .dl-btn{display:inline-block;padding:4px 10px;background:#2d6a4f;color:white;border-radius:6px;text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap}
+    .dl-btn:hover{background:#1e4d37}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1>♻ Deadstock Inventory</h1>
+    <a href="/dashboard">← Dashboard</a>
+  </div>
+</div>
+<div class="page">
+  <a href="/dashboard" class="back">← Dashboard</a>
+  <div class="page-title">Branch-wise Report</div>
+  <p class="page-sub">Live report — updates automatically as Stock Allocation Head processes items.</p>
+
+  <div class="card">
+    {% if rows %}
+    <table>
+      <thead>
+        <tr>
+          <th>Branch ID</th>
+          <th>City</th>
+          <th>Items Resold</th>
+          <th>Items Recycled</th>
+          <th>Items Donated</th>
+          <th>Items Upcycled</th>
+          <th>Items Rebranded</th>
+          <th>Items Disposed</th>
+          <th>Waste Reduced (kg)</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set ns = namespace(tr=0,trc=0,td=0,tu=0,trb=0,tdi=0,tw=0) %}
+        {% for r in rows %}
+        {% set ns.tr  = ns.tr  + (r[2]|int) %}
+        {% set ns.trc = ns.trc + (r[3]|int) %}
+        {% set ns.td  = ns.td  + (r[4]|int) %}
+        {% set ns.tu  = ns.tu  + (r[5]|int) %}
+        {% set ns.trb = ns.trb + (r[6]|int) %}
+        {% set ns.tdi = ns.tdi + (r[7]|int) %}
+        {% set ns.tw  = ns.tw  + (r[8]|float) %}
+        <tr>
+          <td><strong>{{ r[0] }}</strong></td>
+          <td>{{ r[1] }}</td>
+          <td><span class="badge b-resell">{{ r[2] or 0 }}</span></td>
+          <td><span class="badge b-recycle">{{ r[3] or 0 }}</span></td>
+          <td><span class="badge b-donate">{{ r[4] or 0 }}</span></td>
+          <td><span class="badge b-upcycle">{{ r[5] or 0 }}</span></td>
+          <td><span class="badge b-rebrand">{{ r[6] or 0 }}</span></td>
+          <td><span class="badge b-dispose">{{ r[7] or 0 }}</span></td>
+          <td>{{ "%.2f"|format(r[8] or 0) }}</td>
+          <td>
+            <a href="/download_report/{{ r[0] }}" class="dl-btn">⬇ PDF</a>
+            <form method="POST" action="/send_report_email/{{ r[0] }}" style="display:inline;margin-left:4px">
+              <button type="submit" class="dl-btn" style="background:#1565c0;border:none;cursor:pointer">✉ Email</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        <tr class="total-row">
+          <td colspan="2">TOTAL</td>
+          <td>{{ ns.tr }}</td>
+          <td>{{ ns.trc }}</td>
+          <td>{{ ns.td }}</td>
+          <td>{{ ns.tu }}</td>
+          <td>{{ ns.trb }}</td>
+          <td>{{ ns.tdi }}</td>
+          <td>{{ "%.2f"|format(ns.tw) }}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No branch reports found yet. Reports are created when stock is allocated.</div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

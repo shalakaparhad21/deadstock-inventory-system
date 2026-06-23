@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Login – {{ role }}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f4f6f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:white;border-radius:16px;padding:40px 36px;box-shadow:0 4px 24px rgba(0,0,0,.1);width:100%;max-width:420px}
+    .back{font-size:13px;color:#2d6a4f;text-decoration:none;font-weight:600;display:inline-block;margin-bottom:24px}
+    .brand{text-align:center;margin-bottom:28px}
+    .brand .icon{font-size:32px;margin-bottom:8px}
+    .brand h1{font-size:20px;font-weight:700;color:#1a1a2e}
+    .badge{display:inline-block;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#e8f5e9;color:#2d6a4f;border:1px solid #a5d6a7}
+    label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:5px}
+    input{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:16px}
+    input:focus{outline:none;border-color:#2d6a4f}
+    .btn{width:100%;padding:12px;background:#2d6a4f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
+    .btn:hover{background:#1e4d37}
+    .err{margin-top:16px;padding:12px;border-radius:8px;background:#fde8e8;color:#922;border:1px solid #f5c6c6;font-size:14px;text-align:center}
+    .info{margin-top:18px;text-align:center;font-size:13px;color:#888}
+    .forgot{display:block;text-align:center;margin-top:14px;font-size:13px;color:#2d6a4f;text-decoration:none;font-weight:600}
+    .forgot:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <a href="/" class="back">← Role selection</a>
+    <div class="brand">
+      <div class="icon">♻</div>
+      <h1>Deadstock Inventory</h1>
+      <div class="badge">{{ role.replace('_',' ') }} Login</div>
+    </div>
+    <form method="POST">
+      {% if role == 'Admin' %}
+        <label>Username</label>
+        <input type="text" name="username" placeholder="admin" required>
+      {% else %}
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="e.g. aditi@company.com" required>
+      {% endif %}
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter your password" required>
+      <button type="submit" class="btn">Login</button>
+    </form>
+    <a href="/forgot_password/{{ role }}" class="forgot">Forgot Password?</a>
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    <div class="info">Accounts are created by the Admin.</div>
+  </div>
+</body>
+</html>

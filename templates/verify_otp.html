@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><title>Verify OTP – {{ role.replace('_',' ') }}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#f4f6f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:white;border-radius:16px;padding:40px 36px;box-shadow:0 4px 24px rgba(0,0,0,.1);width:100%;max-width:440px}
+    .back{font-size:13px;color:#2d6a4f;text-decoration:none;font-weight:600;display:inline-block;margin-bottom:24px}
+    .brand{text-align:center;margin-bottom:20px}
+    .brand .icon{font-size:32px;margin-bottom:8px}
+    .brand h1{font-size:20px;font-weight:700;color:#1a1a2e}
+    .badge{display:inline-block;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#e8f5e9;color:#2d6a4f;border:1px solid #a5d6a7}
+    .email-hint{text-align:center;font-size:13px;color:#555;margin-bottom:6px}
+    .email-hint strong{color:#2d6a4f}
+    .expiry-note{text-align:center;font-size:12px;color:#aaa;margin-bottom:24px}
+    .otp-row{display:flex;justify-content:center;gap:10px;margin-bottom:20px}
+    .otp-row input{width:46px;height:56px;border:2px solid #ddd;border-radius:10px;font-size:22px;font-weight:700;text-align:center;color:#1a1a2e;transition:border-color .2s}
+    .otp-row input:focus{outline:none;border-color:#2d6a4f;background:#f0faf5}
+    .otp-row input.filled{border-color:#2d6a4f;background:#f0faf5}
+    .btn{width:100%;padding:12px;background:#2d6a4f;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+    .btn:hover{background:#1e4d37}
+    .err{margin-top:16px;padding:12px;border-radius:8px;background:#fde8e8;color:#922;border:1px solid #f5c6c6;font-size:14px;text-align:center}
+    .success-note{margin-bottom:16px;padding:12px;border-radius:8px;background:#d4edda;color:#1a5c35;border:1px solid #a8d5b5;font-size:14px;text-align:center}
+    .links{display:flex;justify-content:space-between;margin-top:18px;font-size:13px}
+    .links a{color:#2d6a4f;text-decoration:none;font-weight:600}
+    .links a:hover{text-decoration:underline}
+    input[type=hidden]{display:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <a href="/forgot_password/{{ role }}" class="back">← Back</a>
+    <div class="brand">
+      <div class="icon">♻</div>
+      <h1>Deadstock Inventory</h1>
+      <div class="badge">{{ role.replace('_',' ') }}</div>
+    </div>
+
+    {% if resent %}
+    <div class="success-note">✓ OTP resent successfully to your email.</div>
+    {% endif %}
+
+    <p class="email-hint">OTP sent to <strong>{{ masked_email }}</strong></p>
+    <p class="expiry-note">⏱ OTP valid for 10 minutes · OTP sent to your email and WhatsApp (if registered)</p>
+
+    <form method="POST" id="otpForm">
+      <input type="hidden" name="email" value="{{ email }}">
+      <div class="otp-row">
+        <input type="text" name="d1" id="d1" maxlength="1" inputmode="numeric" pattern="\d" autocomplete="off" required>
+        <input type="text" name="d2" id="d2" maxlength="1" inputmode="numeric" pattern="\d" autocomplete="off" required>
+        <input type="text" name="d3" id="d3" maxlength="1" inputmode="numeric" pattern="\d" autocomplete="off" required>
+        <input type="text" name="d4" id="d4" maxlength="1" inputmode="numeric" pattern="\d" autocomplete="off" required>
+        <input type="text" name="d5" id="d5" maxlength="1" inputmode="numeric" pattern="\d" autocomplete="off" required>
+        <input type="text" name="d6" id="d6" maxlength="1" inputmode="numeric" pattern="\d" autocomplete="off" required>
+      </div>
+      <button type="submit" class="btn">Verify OTP</button>
+    </form>
+
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+
+    <div class="links">
+      <a href="/forgot_password/{{ role }}">← Try different email</a>
+      <a href="/resend_otp/{{ role }}?email={{ email }}">Resend OTP</a>
+    </div>
+  </div>
+
+  <script>
+    var inputs = [
+      document.getElementById('d1'),
+      document.getElementById('d2'),
+      document.getElementById('d3'),
+      document.getElementById('d4'),
+      document.getElementById('d5'),
+      document.getElementById('d6'),
+    ];
+
+    // Auto-focus first box
+    inputs[0].focus();
+
+    inputs.forEach(function(inp, idx){
+      inp.addEventListener('input', function(){
+        // Strip non-digits
+        this.value = this.value.replace(/\D/g,'').slice(0,1);
+        if(this.value.length === 1){
+          this.classList.add('filled');
+          if(idx < 5){
+            inputs[idx+1].focus();
+          } else {
+            // Last digit filled – auto submit
+            document.getElementById('otpForm').submit();
+          }
+        } else {
+          this.classList.remove('filled');
+        }
+      });
+
+      inp.addEventListener('keydown', function(e){
+        if(e.key === 'Backspace' && !this.value && idx > 0){
+          inputs[idx-1].focus();
+          inputs[idx-1].value = '';
+          inputs[idx-1].classList.remove('filled');
+        }
+        // Allow only digits, backspace, tab, arrows
+        if(!/^\d$/.test(e.key) && !['Backspace','Tab','ArrowLeft','ArrowRight','Delete'].includes(e.key)){
+          e.preventDefault();
+        }
+      });
+
+      inp.addEventListener('paste', function(e){
+        var pasted = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+        e.preventDefault();
+        pasted.split('').forEach(function(ch, i){
+          if(inputs[idx+i]) {
+            inputs[idx+i].value = ch;
+            inputs[idx+i].classList.add('filled');
+          }
+        });
+        var next = idx + pasted.length;
+        if(next >= 6){ document.getElementById('otpForm').submit(); }
+        else if(inputs[next]){ inputs[next].focus(); }
+      });
+    });
+  </script>
+</body>
+</html>
