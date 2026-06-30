@@ -18,10 +18,19 @@ This project demonstrates full-stack development skills including backend logic,
 
 ### 🔐 Role-Based Access Control
 - Admin
-- Branch Manager
-- Warehouse Manager
-- Stock Allocation Officer  
+- Branch
+- Warehouse
+- Stock Allocation
+
 Each role has restricted permissions similar to real enterprise systems.
+
+---
+
+### 🔑 Authentication & Security
+- OTP-based forgot password / reset flow for all roles, including Admin
+- 6-digit OTP with 10-minute expiry, retry limits, and secure token-based reset
+- OTP delivery via Gmail SMTP (email)
+- Session-based role access control
 
 ---
 
@@ -50,9 +59,9 @@ Each role has restricted permissions similar to real enterprise systems.
 ### 📊 Reports & Sustainability
 - PDF report generation using ReportLab
 - Branch-wise and allocation reports
-- Sustainability and waste-reduction tracking
+- Sustainability rating auto-calculated via MySQL triggers (`trg_update_branch_rating`)
+- Multi-channel alerting: WhatsApp via Twilio API, email via SendGrid SMTP
 - Automated email delivery of reports
-
 ---
 
 ## 🛠️ Tech Stack
@@ -65,6 +74,7 @@ Each role has restricted permissions similar to real enterprise systems.
 | Reports | ReportLab (PDF) |
 | QR Codes | qrcode, Pillow |
 | Authentication | Session-based RBAC |
+| Notifications | Twilio (WhatsApp), SendGrid (Email) |
 
 ---
 ## 👥 User Roles
@@ -72,9 +82,9 @@ Each role has restricted permissions similar to real enterprise systems.
 | Role | Description |
 |-----|------------|
 | Admin | Full system access, reports, analytics |
-| Branch Manager | View deadstock and materials |
-| Warehouse Manager | Manage warehouse data |
-| Stock Allocation Officer | Allocate deadstock and generate reports |
+| Branch | View deadstock and materials |
+| Warehouse | Manage warehouse data |
+| Stock Allocation | Allocate deadstock and generate reports |
 
 ---
 
